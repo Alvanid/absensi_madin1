@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Kartu Santri{% endblock %}
+{% block page_title %}Kartu Identitas Santri{% endblock %}
+
+{% block head %}
+<style>
+@media print {
+    .no-print { display: none !important; }
+    body { background: white; }
+}
+.kartu-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 85.6mm);
+    gap: 5mm;
+    padding: 10mm;
+    justify-content: center;
+}
+.kartu-item {
+    width: 85.6mm;
+    height: 53.98mm;
+    background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+    border-radius: 8px;
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    page-break-inside: avoid;
+}
+.kartu-header {
+    background: #f59e0b;
+    color: #065f46;
+    padding: 3mm;
+    text-align: center;
+    font-weight: bold;
+    font-size: 9pt;
+}
+.kartu-body { padding: 3mm; display: flex; gap: 3mm; }
+.kartu-photo {
+    width: 22mm;
+    height: 22mm;
+    background: white;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 8pt;
+}
+.kartu-info { flex: 1; font-size: 8pt; }
+.kartu-info .nama { font-size: 10pt; font-weight: bold; margin-bottom: 2mm; }
+.kartu-info div { margin-bottom: 1mm; }
+.kartu-qr {
+    position: absolute;
+    bottom: 3mm;
+    right: 3mm;
+    width: 20mm;
+    height: 20mm;
+    background: white;
+    padding: 1mm;
+    border-radius: 3px;
+}
+.kartu-qr img { width: 100%; height: 100%; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card-custom no-print">
+    <div class="card-custom-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="mb-0"><i class="bi bi-id-card"></i> Kartu Santri ({{ santri|length }} kartu)</h5>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('qr_index') }}" class="btn btn-sm btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
+            <button onclick="window.print()" class="btn btn-sm btn-primary"><i class="bi bi-printer"></i> Print</button>
+            <a href="{{ url_for('qr_kartu_pdf') }}" class="btn btn-sm btn-success"><i class="bi bi-file-pdf"></i> Download PDF</a>
+        </div>
+    </div>
+</div>
+
+<div class="kartu-grid">
+    {% for s in santri %}
+    <div class="kartu-item">
+        <div class="kartu-header">KARTU SANTRI - MADIN NURUL HIDAYAH</div>
+        <div class="kartu-body">
+            <div class="kartu-photo">
+                {% if s.foto %}
+                <img src="{{ url_for('static', filename='uploads/' + s.foto) }}" style="width:100%;height:100%;object-fit:cover;border-radius:4px">
+                {% else %}FOTO{% endif %}
+            </div>
+            <div class="kartu-info">
+                <div class="nama">{{ s.nama_lengkap }}</div>
+                <div><strong>NIS:</strong> {{ s.nis }}</div>
+                <div><strong>Kelas:</strong> {{ s.nama_kelas }}</div>
+                <div><strong>L/P:</strong> {{ 'Laki-laki' if s.jenis_kelamin == 'L' else 'Perempuan' }}</div>
+            </div>
+        </div>
+        <div class="kartu-qr">
+            {% if s.qr_token %}
+            <img src="{{ url_for('static', filename='qr_santri/qr_' + s.id|string + '_' + s.qr_token[:8] + '.png') }}" alt="QR">
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12"><div class="empty-state">Tidak ada kartu untuk dicetak</div></div>
+    {% endfor %}
+</div>
+{% endblock %}

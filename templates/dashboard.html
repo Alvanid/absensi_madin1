@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Admin{% endblock %}
+{% block page_title %}Dashboard Administrator{% endblock %}
+
+{% block content %}
+<!-- STAT CARDS -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3">
+        <div class="stat-card stat-primary">
+            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+            <div class="stat-info">
+                <small>Total Santri Aktif</small>
+                <h3>{{ stats.total_santri }}</h3>
+                <div class="stat-meta">L: {{ stats.santri_l }} | P: {{ stats.santri_p }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="stat-card stat-success">
+            <div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+            <div class="stat-info">
+                <small>Hadir Hari Ini</small>
+                <h3>{{ stats.hadir_hari_ini }}</h3>
+                <div class="stat-meta">Izin: {{ stats.izin_hari_ini }} | Sakit: {{ stats.sakit_hari_ini }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="stat-card stat-warning">
+            <div class="stat-icon"><i class="bi bi-building"></i></div>
+            <div class="stat-info">
+                <small>Total Kelas</small>
+                <h3>{{ stats.total_kelas }}</h3>
+                <div class="stat-meta">Pengajar: {{ stats.total_pengajar }}</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-xl-3">
+        <div class="stat-card stat-info">
+            <div class="stat-icon"><i class="bi bi-graph-up"></i></div>
+            <div class="stat-info">
+                <small>Persentase Kehadiran</small>
+                <h3>{{ stats.persentase }}%</h3>
+                <div class="stat-meta">Alfa: {{ stats.alfa_hari_ini }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CHARTS -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card-custom">
+            <div class="card-custom-header">
+                <h5><i class="bi bi-graph-up"></i> Grafik Kehadiran 7 Hari Terakhir</h5>
+            </div>
+            <div class="card-custom-body">
+                <canvas id="weeklyChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-custom">
+            <div class="card-custom-header">
+                <h5><i class="bi bi-pie-chart-fill"></i> Kehadiran Hari Ini</h5>
+            </div>
+            <div class="card-custom-body">
+                <canvas id="todayChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card-custom">
+            <div class="card-custom-header">
+                <h5><i class="bi bi-clock-history"></i> Aktivitas Terbaru</h5>
+            </div>
+            <div class="card-custom-body p-0">
+                <div class="activity-list">
+                    {% for log in activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="bi bi-person-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <strong>{{ log.username }}</strong>
+                            <div>{{ log.aktivitas }} {% if log.detail %}<small class="text-muted">- {{ log.detail }}</small>{% endif %}</div>
+                            <small class="text-muted">{{ log.created_at[:16] }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">Belum ada aktivitas</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card-custom">
+            <div class="card-custom-header">
+                <h5><i class="bi bi-qr-code"></i> Kehadiran Per Kelas Hari Ini</h5>
+            </div>
+            <div class="card-custom-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr><th>Kelas</th><th>Santri</th><th>Hadir</th><th>%</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for k in per_kelas %}
+                            <tr>
+                                <td><strong>{{ k.nama_kelas }}</strong></td>
+                                <td>{{ k.total_santri }}</td>
+                                <td>{{ k.hadir or 0 }}</td>
+                                <td>
+                                    {% set persen = ((k.hadir or 0) / k.total_santri * 100) if k.total_santri > 0 else 0 %}
+                                    <span class="badge bg-success">{{ "%.0f"|format(persen) }}%</span>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="4" class="text-center text-muted">Belum ada data</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const weeklyData = {{ weekly|tojson }};
+const labels = weeklyData.map(d => d.tanggal.substring(5));
+const hadir = weeklyData.map(d => d.hadir || 0);
+const izin = weeklyData.map(d => d.izin || 0);
+const sakit = weeklyData.map(d => d.sakit || 0);
+const alfa = weeklyData.map(d => d.alfa || 0);
+
+new Chart(document.getElementById('weeklyChart'), {
+    type: 'line',
+    data: {
+        labels: labels,
+        datasets: [
+            {label: 'Hadir', data: hadir, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.1)', fill: true, tension: 0.4},
+            {label: 'Izin', data: izin, borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.1)', fill: true, tension: 0.4},
+            {label: 'Sakit', data: sakit, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.1)', fill: true, tension: 0.4},
+            {label: 'Alfa', data: alfa, borderColor: '#ef4444', backgroundColor: 'rgba(239,68,68,0.1)', fill: true, tension: 0.4}
+        ]
+    },
+    options: {
+        responsive: true,
+        plugins: {legend: {position: 'bottom'}},
+        scales: {y: {beginAtZero: true}}
+    }
+});
+
+new Chart(document.getElementById('todayChart'), {
+    type: 'doughnut',
+    data: {
+        labels: ['Hadir', 'Izin', 'Sakit', 'Alfa'],
+        datasets: [{
+            data: [{{ stats.hadir_hari_ini }}, {{ stats.izin_hari_ini }}, {{ stats.sakit_hari_ini }}, {{ stats.alfa_hari_ini }}],
+            backgroundColor: ['#10b981', '#f59e0b', '#3b82f6', '#ef4444']
+        }]
+    },
+    options: {plugins: {legend: {position: 'bottom'}}}
+});
+</script>
+{% endblock %}

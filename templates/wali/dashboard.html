@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Test</title>
+</head>
+<body>
+    <h1>Dashboard Admin - Test</h1>
+    <p>Login berhasil! User: {{ current_user.username }}</p>
+    <p>Role: {{ current_user.role }}</p>
+    <p>Settings: {{ settings }}</p>
+    
+    <h2>Statistik</h2>
+    <ul>
+        <li>Total Santri: {{ stats.total_santri }}</li>
+        <li>Total Kelas: {{ stats.total_kelas }}</li>
+        <li>Hadir Hari Ini: {{ stats.hadir_hari_ini }}</li>
+    </ul>
+    
+    <a href="/logout">Logout</a>
+</body>
+</html>

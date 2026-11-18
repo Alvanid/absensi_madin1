@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Scanner QR{% endblock %}
+{% block page_title %}Scanner QR Absensi{% endblock %}
+
+{% block head %}
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="card-custom">
+            <div class="card-custom-header"><h5><i class="bi bi-gear-fill"></i> Konfigurasi Sesi</h5></div>
+            <div class="card-custom-body">
+                <form id="configForm">
+                    <div class="mb-3">
+                        <label class="form-label">Kelas <span class="text-danger">*</span></label>
+                        <select id="kelas_id" class="form-select" required>
+                            <option value="">Pilih kelas...</option>
+                            {% for k in kelas %}
+                            <option value="{{ k.id }}">{{ k.nama_kelas }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nama Sesi <span class="text-danger">*</span></label>
+                        <input type="text" id="nama_sesi" class="form-control" placeholder="Contoh: Kajian Pagi" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tanggal</label>
+                        <input type="date" id="tanggal" class="form-control" value="{{ today }}" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <label class="form-label">Jam Mulai</label>
+                            <input type="time" id="jam_mulai" class="form-control">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Jam Selesai</label>
+                            <input type="time" id="jam_selesai" class="form-control">
+                        </div>
+                    </div>
+                    <button type="button" id="btnCreateSesi" class="btn btn-primary w-100 mt-3">
+                        <i class="bi bi-play-circle"></i> Buat Sesi & Mulai Scanner
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <div class="card-custom mt-3" id="scannerCard" style="display:none">
+            <div class="card-custom-header d-flex justify-content-between">
+                <h5 class="mb-0"><i class="bi bi-camera-fill"></i> Scanner</h5>
+                <div>
+                    <button id="btnPause" class="btn btn-sm btn-warning"><i class="bi bi-pause"></i></button>
+                    <button id="btnStop" class="btn btn-sm btn-danger"><i class="bi bi-stop"></i></button>
+                </div>
+            </div>
+            <div class="card-custom-body">
+                <div id="reader" style="width:100%"></div>
+                <small class="text-muted">Arahkan kamera ke QR Code santri</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-7">
+        <div class="card-custom">
+            <div class="card-custom-header">
+                <h5><i class="bi bi-info-circle"></i> Informasi Sesi</h5>
+            </div>
+            <div class="card-custom-body" id="sesiInfo">
+                <div class="empty-state">Belum ada sesi aktif. Buat sesi terlebih dahulu.</div>
+            </div>
+        </div>
+        
+        <div class="card-custom mt-3">
+            <div class="card-custom-header">
+                <h5><i class="bi bi-list-check"></i> Riwayat Scan (<span id="scanCount">0</span>)</h5>
+            </div>
+            <div class="card-custom-body p-0" style="max-height:400px;overflow-y:auto">
+                <div id="scanHistory" class="scan-history">
+                    <div class="empty-state">Belum ada scan</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let html5QrCode = null;
+let sesiId = null;
+let scanCount = 0;
+let isPaused = false;
+
+document.getElementById('btnCreateSesi').addEventListener('click', async function() {
+    const kelas_id = document.getElementById('kelas_id').value;
+    const nama_sesi = document.getElementById('nama_sesi').value;
+    const tanggal = document.getElementById('tanggal').value;
+    const jam_mulai = document.getElementById('jam_mulai').value;
+    const jam_selesai = document.getElementById('jam_selesai').value;
+    
+    if (!kelas_id || !nama_sesi || !tanggal) {
+        Swal.fire('Error', 'Lengkapi data sesi', 'error');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('kelas_id', kelas_id);
+    formData.append('nama_sesi', nama_sesi);
+    formData.append('tanggal', tanggal);
+    formData.append('jam_mulai', jam_mulai);
+    formData.append('jam_selesai', jam_selesai);
+    
+    try {
+        const res = await fetch('{{ url_for("sesi_create") }}', {method: 'POST', body: formData, redirect: 'manual'});
+        // Ambil sesi terakhir untuk kelas ini
+        const resSesi = await fetch(`/absensi/sesi/last?kelas_id=${kelas_id}&tanggal=${tanggal}`);
+        const data = await resSesi.json();
+        if (data && data.id) {
+            sesiId = data.id;
+            document.getElementById('scannerCard').style.display = 'block';
+            document.getElementById('sesiInfo').innerHTML = `
+                <div class="row g-2">
+                    <div class="col-6"><strong>Sesi:</strong> ${nama_sesi}</div>
+                    <div class="col-6"><strong>Tanggal:</strong> ${tanggal}</div>
+                    <div class="col-6"><strong>Kelas ID:</strong> ${kelas_id}</div>
+                    <div class="col-6"><strong>Jam:</strong> ${jam_mulai || '-'} - ${jam_selesai || '-'}</div>
+                </div>
+            `;
+            startScanner();
+        } else {
+            // Fallback: langsung start scanner
+            Swal.fire('Info', 'Sesi dibuat. Memulai scanner...', 'success');
+            // Coba ambil sesi terakhir dengan cara lain
+            setTimeout(() => location.reload(), 1500);
+        }
+    } catch (e) {
+        Swal.fire('Error', 'Gagal membuat sesi: ' + e.message, 'error');
+    }
+});
+
+async function startScanner() {
+    html5QrCode = new Html5Qrcode("reader");
+    const config = {fps: 10, qrbox: {width: 250, height: 250}};
+    
+    try {
+        await html5QrCode.start({facingMode: "environment"}, config, onScanSuccess);
+    } catch (err) {
+        Swal.fire('Error', 'Gagal mengakses kamera: ' + err, 'error');
+    }
+}
+
+async function onScanSuccess(decodedText) {
+    if (isPaused || !sesiId) return;
+    isPaused = true; // Pause untuk mencegah duplicate scan
+    
+    // Tampilkan loading
+    const toast = Swal.fire({
+        title: 'Memproses...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+    
+    try {
+        const res = await fetch('{{ url_for("absensi_scan_api") }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({token: decodedText, sesi_id: sesiId})
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            scanCount++;
+            document.getElementById('scanCount').textContent = scanCount;
+            addToHistory(data.data, 'success');
+            Swal.fire({
+                icon: 'success',
+                title: 'Absensi Berhasil!',
+                html: `<strong>${data.data.nama}</strong><br>NIS: ${data.data.nis}<br>Kelas: ${data.data.kelas}`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } else {
+            addToHistory({nama: 'Unknown', message: data.message}, 'error');
+            Swal.fire({icon: 'error', title: 'Gagal', text: data.message, timer: 2000, showConfirmButton: false});
+        }
+    } catch (e) {
+        Swal.fire({icon: 'error', title: 'Error', text: e.message});
+    }
+    
+    setTimeout(() => { isPaused = false; }, 2000);
+}
+
+function addToHistory(data, type) {
+    const container = document.getElementById('scanHistory');
+    if (container.querySelector('.empty-state')) container.innerHTML = '';
+    const item = document.createElement('div');
+    item.className = `scan-item scan-${type}`;
+    const time = new Date().toLocaleTimeString('id-ID');
+    item.innerHTML = `
+        <div class="scan-icon"><i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'x-circle-fill'}"></i></div>
+        <div class="scan-info">
+            <strong>${data.nama || 'Unknown'}</strong>
+            <small>${data.message || (data.nis + ' - ' + data.kelas)}</small>
+        </div>
+        <small class="scan-time">${time}</small>
+    `;
+    container.insertBefore(item, container.firstChild);
+}
+
+document.getElementById('btnPause').addEventListener('click', function() {
+    isPaused = !isPaused;
+    this.innerHTML = isPaused ? '<i class="bi bi-play"></i>' : '<i class="bi bi-pause"></i>';
+    this.className = isPaused ? 'btn btn-sm btn-success' : 'btn btn-sm btn-warning';
+});
+
+document.getElementById('btnStop').addEventListener('click', async function() {
+    if (html5QrCode && html5QrCode.isScanning) {
+        await html5QrCode.stop();
+    }
+    document.getElementById('scannerCard').style.display = 'none';
+    Swal.fire('Scanner dihentikan', `Total ${scanCount} santri telah diabsen`, 'info');
+});
+</script>
+{% endblock %}

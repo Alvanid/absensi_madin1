@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Detail Anak{% endblock %}
+{% block page_title %}Detail Kehadiran Anak{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card-custom">
+            <div class="card-custom-body text-center">
+                {% if santri.foto %}
+                <img src="{{ url_for('static', filename='uploads/' + santri.foto) }}" class="avatar-lg mb-3">
+                {% else %}
+                <div class="avatar-lg bg-light d-flex align-items-center justify-content-center mb-3 mx-auto">
+                    <i class="bi bi-person" style="font-size:3rem"></i>
+                </div>
+                {% endif %}
+                <h5>{{ santri.nama_lengkap }}</h5>
+                <p class="text-muted">NIS: {{ santri.nis }}</p>
+                <span class="badge bg-primary">{{ santri.nama_kelas }}</span>
+            </div>
+        </div>
+        
+        <div class="row g-2 mt-2">
+            <div class="col-6">
+                <div class="stat-card stat-success">
+                    <div class="stat-info"><small>Hadir</small><h3>{{ stats.hadir or 0 }}</h3></div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-card stat-warning">
+                    <div class="stat-info"><small>Izin</small><h3>{{ stats.izin or 0 }}</h3></div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-card stat-info">
+                    <div class="stat-info"><small>Sakit</small><h3>{{ stats.sakit or 0 }}</h3></div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="stat-card stat-danger">
+                    <div class="stat-info"><small>Alfa</small><h3>{{ stats.alfa or 0 }}</h3></div>
+                </div>
+            </div>
+        </div>
+        
+        {% set total = stats.total or 0 %}
+        {% set hadir = stats.hadir or 0 %}
+        {% set persen = (hadir / total * 100) if total > 0 else 0 %}
+        <div class="card-custom mt-3">
+            <div class="card-custom-body text-center">
+                <h6>Persentase Kehadiran</h6>
+                <h2 class="text-success">{{ "%.1f"|format(persen) }}%</h2>
+                <small class="text-muted">Total pertemuan: {{ total }}</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card-custom">
+            <div class="card-custom-header"><h5><i class="bi bi-clock-history"></i> Riwayat Kehadiran</h5></div>
+            <div class="card-custom-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr><th>Tanggal</th><th>Sesi</th><th>Status</th><th>Waktu</th><th>Metode</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for a in absensi %}
+                            <tr>
+                                <td>{{ a.tanggal }}</td>
+                                <td>{{ a.nama_sesi }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if a.status == 'hadir' else 'warning' if a.status == 'izin' else 'info' if a.status == 'sakit' else 'danger' }}">
+                                        {{ a.status|upper }}
+                                    </span>
+                                </td>
+                                <td>{{ a.waktu_scan or '-' }}</td>
+                                <td>{{ a.metode }}</td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="5" class="text-center text-muted">Belum ada riwayat</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Dashboard Ustaz{% endblock %}
+{% block page_title %}Dashboard Pengajar{% endblock %}
+
+{% block content %}
+<div class="card-custom mb-4">
+    <div class="card-custom-header">
+        <h5><i class="bi bi-building"></i> Kelas yang Saya Ampu</h5>
+    </div>
+    <div class="card-custom-body">
+        {% if kelas_list %}
+        <div class="row g-3">
+            {% for k in kelas_list %}
+            <div class="col-md-6 col-lg-4">
+                <div class="kelas-card">
+                    <div class="kelas-card-header">
+                        <h6>{{ k.nama_kelas }}</h6>
+                        <small>{{ k.tingkatan }}</small>
+                    </div>
+                    <div class="kelas-card-body">
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <small>Total Santri</small>
+                                <h4>{{ stats[k.id].total }}</h4>
+                            </div>
+                            <div class="col-6">
+                                <small>Hadir Hari Ini</small>
+                                <h4 class="text-success">{{ stats[k.id].hadir }}</h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="kelas-card-footer">
+                        <a href="{{ url_for('absensi_scan') }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-camera"></i> Scan QR
+                        </a>
+                        <a href="{{ url_for('absensi_manual', kelas_id=k.id) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Absensi Manual
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> Anda belum di-assign ke kelas manapun. Hubungi administrator.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <a href="{{ url_for('absensi_scan') }}" class="card-custom quick-action text-decoration-none">
+            <div class="card-custom-body text-center">
+                <i class="bi bi-camera-fill" style="font-size:3rem;color:#10b981"></i>
+                <h5 class="mt-2">Scan QR Absensi</h5>
+                <small class="text-muted">Mulai sesi dengan scan QR</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('absensi_manual') }}" class="card-custom quick-action text-decoration-none">
+            <div class="card-custom-body text-center">
+                <i class="bi bi-pencil-square" style="font-size:3rem;color:#f59e0b"></i>
+                <h5 class="mt-2">Absensi Manual</h5>
+                <small class="text-muted">Input absensi manual</small>
+            </div>
+        </a>
+    </div>
+    <div class="col-md-4">
+        <a href="{{ url_for('absensi_rekap') }}" class="card-custom quick-action text-decoration-none">
+            <div class="card-custom-body text-center">
+                <i class="bi bi-clipboard-data" style="font-size:3rem;color:#3b82f6"></i>
+                <h5 class="mt-2">Rekap Absensi</h5>
+                <small class="text-muted">Lihat rekap kehadiran</small>
+            </div>
+        </a>
+    </div>
+</div>
+{% endblock %}

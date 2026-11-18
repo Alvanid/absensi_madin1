@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Absensi Manual{% endblock %}
+{% block page_title %}Absensi Manual{% endblock %}
+
+{% block content %}
+<div class="card-custom">
+    <div class="card-custom-header"><h5><i class="bi bi-pencil-square"></i> Absensi Manual</h5></div>
+    <div class="card-custom-body">
+        <form method="GET" class="row g-2 mb-3">
+            <div class="col-md-4">
+                <label class="form-label">Kelas</label>
+                <select name="kelas_id" class="form-select" onchange="this.form.submit()">
+                    <option value="">Pilih kelas...</option>
+                    {% for k in kelas %}
+                    <option value="{{ k.id }}" {% if filter_kelas == k.id|string %}selected{% endif %}>{{ k.nama_kelas }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Sesi</label>
+                <select name="sesi_id" class="form-select">
+                    <option value="">Pilih sesi...</option>
+                    {% for s in sesi %}
+                    <option value="{{ s.id }}" {% if filter_sesi == s.id|string %}selected{% endif %}>
+                        {{ s.tanggal }} - {{ s.nama_sesi }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button class="btn btn-primary w-100"><i class="bi bi-search"></i> Tampilkan</button>
+            </div>
+        </form>
+        
+        {% if filter_kelas and filter_sesi %}
+        <form method="POST" action="{{ url_for('absensi_manual_save') }}">
+            <input type="hidden" name="sesi_id" value="{{ filter_sesi }}">
+            
+            <div class="d-flex gap-2 mb-3 flex-wrap">
+                <button type="submit" name="status" value="hadir" class="btn btn-success btn-sm"><i class="bi bi-check"></i> Tandai Hadir Terpilih</button>
+                <button type="submit" name="status" value="izin" class="btn btn-warning btn-sm"><i class="bi bi-envelope"></i> Izin Terpilih</button>
+                <button type="submit" name="status" value="sakit" class="btn btn-info btn-sm"><i class="bi bi-thermometer"></i> Sakit Terpilih</button>
+                <button type="submit" name="status" value="alfa" class="btn btn-danger btn-sm"><i class="bi bi-x"></i> Alfa Terpilih</button>
+                
+                <form method="POST" action="{{ url_for('absensi_massal_hadir') }}" class="d-inline">
+                    <input type="hidden" name="sesi_id" value="{{ filter_sesi }}">
+                    <button type="submit" class="btn btn-outline-success btn-sm" onclick="return confirm('Tandai SEMUA santri yang belum absen sebagai HADIR?')">
+                        <i class="bi bi-check-all"></i> Semua Hadir
+                    </button>
+                </form>
+                
+                <button type="button" onclick="document.querySelectorAll('.chk-santri').forEach(c=>c.checked=true)" class="btn btn-outline-secondary btn-sm">Pilih Semua</button>
+            </div>
+            
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="40"><input type="checkbox" onclick="document.querySelectorAll('.chk-santri').forEach(c=>c.checked=this.checked)"></th>
+                            <th>NIS</th>
+                            <th>Nama</th>
+                            <th>L/P</th>
+                            <th>Status Absen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in santri %}
+                        <tr>
+                            <td><input type="checkbox" name="santri_ids" value="{{ s.id }}" class="chk-santri"></td>
+                            <td>{{ s.nis }}</td>
+                            <td>{{ s.nama_lengkap }}</td>
+                            <td><span class="badge bg-{{ 'primary' if s.jenis_kelamin == 'L' else 'danger' }}">{{ s.jenis_kelamin }}</span></td>
+                            <td id="status_{{ s.id }}"><span class="text-muted">Belum absen</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label">Catatan (opsional)</label>
+                <input type="text" name="catatan" class="form-control" placeholder="Catatan tambahan...">
+            </div>
+        </form>
+        {% elif filter_kelas %}
+        <div class="alert alert-info">Pilih sesi untuk mulai absensi</div>
+        {% else %}
+        <div class="alert alert-info">Pilih kelas terlebih dahulu</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

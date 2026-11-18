@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if mode == 'edit' else 'Tambah' }} Santri{% endblock %}
+{% block page_title %}{{ 'Edit' if mode == 'edit' else 'Tambah' }} Santri{% endblock %}
+
+{% block content %}
+<div class="card-custom">
+    <div class="card-custom-header">
+        <h5><i class="bi bi-person-plus-fill"></i> Form Data Santri</h5>
+    </div>
+    <div class="card-custom-body">
+        <form method="POST" enctype="multipart/form-data">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">NIS <span class="text-danger">*</span></label>
+                    <input type="text" name="nis" class="form-control" required value="{{ santri.nis if santri else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                    <input type="text" name="nama_lengkap" class="form-control" required value="{{ santri.nama_lengkap if santri else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Jenis Kelamin <span class="text-danger">*</span></label>
+                    <select name="jenis_kelamin" class="form-select" required>
+                        <option value="">Pilih...</option>
+                        <option value="L" {% if santri and santri.jenis_kelamin == 'L' %}selected{% endif %}>Laki-laki</option>
+                        <option value="P" {% if santri and santri.jenis_kelamin == 'P' %}selected{% endif %}>Perempuan</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Tempat Lahir</label>
+                    <input type="text" name="tempat_lahir" class="form-control" value="{{ santri.tempat_lahir if santri else '' }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Tanggal Lahir</label>
+                    <input type="date" name="tanggal_lahir" class="form-control" value="{{ santri.tanggal_lahir if santri else '' }}">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Alamat</label>
+                    <textarea name="alamat" class="form-control" rows="2">{{ santri.alamat if santri else '' }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Nama Wali</label>
+                    <input type="text" name="nama_wali" class="form-control" value="{{ santri.nama_wali if santri else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Nomor WhatsApp Wali</label>
+                    <input type="text" name="nomor_wa_wali" class="form-control" placeholder="08xxxxxxxxxx" value="{{ santri.nomor_wa_wali if santri else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Kelas <span class="text-danger">*</span></label>
+                    <select name="kelas_id" class="form-select" required>
+                        <option value="">Pilih kelas...</option>
+                        {% for k in kelas %}
+                        <option value="{{ k.id }}" {% if santri and santri.kelas_id == k.id %}selected{% endif %}>{{ k.nama_kelas }} ({{ k.tingkatan }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Tanggal Masuk</label>
+                    <input type="date" name="tanggal_masuk" class="form-control" value="{{ santri.tanggal_masuk if santri else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Foto Santri</label>
+                    <input type="file" name="foto" class="form-control" accept="image/*">
+                    {% if santri and santri.foto %}
+                    <small class="text-muted">Foto saat ini: {{ santri.foto }}</small>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
+                <a href="{{ url_for('santri_index') }}" class="btn btn-secondary">Batal</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistem Absensi Santri</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --emerald-600: #059669;
+            --emerald-700: #047857;
+            --emerald-800: #065f46;
+            --emerald-900: #064e3b;
+            --gold-400: #fbbf24;
+            --gold-500: #f59e0b;
+            --gold-600: #d97706;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--emerald-800) 0%, var(--emerald-600) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .login-card {
+            background: white;
+            border-radius: 16px;
+            padding: 36px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .login-header { text-align: center; margin-bottom: 28px; }
+        .login-logo {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, var(--gold-400), var(--gold-600));
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: var(--emerald-900);
+            margin: 0 auto 16px;
+            box-shadow: 0 8px 20px rgba(245,158,11,0.3);
+        }
+        .login-header h3 {
+            margin: 0;
+            color: var(--emerald-800);
+            font-weight: 800;
+            font-size: 22px;
+        }
+        .login-header p {
+            color: #6b7280;
+            margin: 4px 0 0;
+            font-size: 14px;
+        }
+        .form-label { font-weight: 600; font-size: 14px; color: #374151; }
+        .input-group-text {
+            background: #f3f4f6;
+            border-color: #e5e7eb;
+            color: var(--emerald-700);
+        }
+        .form-control {
+            border-color: #e5e7eb;
+            padding: 10px 12px;
+        }
+        .form-control:focus {
+            border-color: var(--emerald-500);
+            box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.2);
+        }
+        .btn-login {
+            background: var(--emerald-600);
+            border-color: var(--emerald-600);
+            color: white;
+            font-weight: 700;
+            padding: 11px;
+            font-size: 15px;
+            border-radius: 10px;
+            transition: all 0.2s;
+        }
+        .btn-login:hover {
+            background: var(--emerald-700);
+            border-color: var(--emerald-700);
+            transform: translateY(-1px);
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 24px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        .alert {
+            border-radius: 10px;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="login-header">
+            <div class="login-logo">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h3>Madin Nurul Hidayah</h3>
+            <p>Sistem Informasi Absensi Santri</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'message' else 'info' }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="/login">
+            <div class="mb-3">
+                <label class="form-label">Username</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                    <input type="text" name="username" class="form-control" required autofocus autocomplete="username">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" name="password" class="form-control" required autocomplete="current-password">
+                </div>
+            </div>
+            <button type="submit" class="btn btn-login w-100">
+                <i class="bi bi-box-arrow-in-right"></i> Masuk
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <small>&copy; 2026 Madin Nurul Hidayah</small>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Sistem Absensi Santri{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.2/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <div class="app-wrapper">
+        <!-- SIDEBAR -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-wrapper">
+                    <div class="logo-icon">
+                        <i class="bi bi-mortarboard-fill"></i>
+                    </div>
+                    <div class="logo-text">
+                        <h6>MADIN</h6>
+                        <small>NURUL HIDAYAH</small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sidebar-user">
+                <div class="user-avatar">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="user-info">
+                    <strong>{{ current_user.nama_lengkap }}</strong>
+                    <small>{{ current_user.role|title }}</small>
+                </div>
+            </div>
+            
+            <nav class="sidebar-menu">
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="menu-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                    <i class="bi bi-speedometer2"></i><span>Dashboard</span>
+                </a>
+                <a href="{{ url_for('santri_index') }}" class="menu-item">
+                    <i class="bi bi-people-fill"></i><span>Data Santri</span>
+                </a>
+                <a href="{{ url_for('kelas_index') }}" class="menu-item">
+                    <i class="bi bi-building"></i><span>Data Kelas</span>
+                </a>
+                <a href="{{ url_for('pengajar_index') }}" class="menu-item">
+                    <i class="bi bi-person-badge"></i><span>Data Pengajar</span>
+                </a>
+                <a href="{{ url_for('qr_index') }}" class="menu-item">
+                    <i class="bi bi-qr-code"></i><span>QR Code Santri</span>
+                </a>
+                <a href="{{ url_for('absensi_scan') }}" class="menu-item">
+                    <i class="bi bi-camera-fill"></i><span>Scanner QR</span>
+                </a>
+                <a href="{{ url_for('pengaturan') }}" class="menu-item">
+                    <i class="bi bi-gear-fill"></i><span>Pengaturan</span>
+                </a>
+                {% endif %}
+            </nav>
+            
+            <div class="sidebar-footer">
+                <a href="{{ url_for('logout') }}" class="menu-item text-danger">
+                    <i class="bi bi-box-arrow-right"></i><span>Logout</span>
+                </a>
+            </div>
+        </aside>
+        
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <nav class="top-navbar">
+                <div class="navbar-title">
+                    <h5>{% block page_title %}Dashboard{% endblock %}</h5>
+                </div>
+            </nav>
+            
+            <main class="content-area">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div class="flash-container">
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% endwith %}
+                
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    {% else %}
+    <div class="container mt-5">
+        <p>Silakan <a href="{{ url_for('login') }}">login</a> terlebih dahulu.</p>
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

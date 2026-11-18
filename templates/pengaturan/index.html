@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Pengaturan{% endblock %}
+{% block page_title %}Pengaturan Sistem{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card-custom">
+            <div class="card-custom-header"><h5><i class="bi bi-gear-fill"></i> Pengaturan Madin</h5></div>
+            <div class="card-custom-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label class="form-label">Nama Madin</label>
+                        <input type="text" name="nama_madin" class="form-control" value="{{ settings.nama_madin }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Alamat</label>
+                        <textarea name="alamat_madin" class="form-control">{{ settings.alamat_madin }}</textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Telepon</label>
+                        <input type="text" name="telepon_madin" class="form-control" value="{{ settings.telepon_madin }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Logo</label>
+                        <input type="file" name="logo" class="form-control" accept="image/*">
+                        {% if settings.logo_madin %}
+                        <small class="text-muted">Logo saat ini: {{ settings.logo_madin }}</small>
+                        {% endif %}
+                    </div>
+                    <button class="btn btn-primary"><i class="bi bi-save"></i> Simpan</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-6">
+        <div class="card-custom">
+            <div class="card-custom-header"><h5><i class="bi bi-database"></i> Backup Database</h5></div>
+            <div class="card-custom-body">
+                <form method="POST" action="{{ url_for('backup_create') }}" class="mb-3">
+                    <button class="btn btn-success w-100"><i class="bi bi-download"></i> Buat Backup Sekarang</button>
+                </form>
+                <h6>Riwayat Backup</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead><tr><th>File</th><th>Ukuran</th><th>Aksi</th></tr></thead>
+                        <tbody>
+                            {% for b in backups %}
+                            <tr>
+                                <td><small>{{ b.filename }}</small></td>
+                                <td>{{ b.size_mb }} MB</td>
+                                <td>
+                                    <a href="{{ url_for('backup_download', filename=b.filename) }}" class="btn btn-xs btn-outline-primary"><i class="bi bi-download"></i></a>
+                                    <form method="POST" action="{{ url_for('backup_restore', filename=b.filename) }}" class="d-inline" onsubmit="return confirm('Restore database? Data saat ini akan ditimpa!')">
+                                        <button class="btn btn-xs btn-outline-warning"><i class="bi bi-arrow-counterclockwise"></i></button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr><td colspan="3" class="text-center text-muted">Belum ada backup</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-custom mt-3">
+    <div class="card-custom-header"><h5><i class="bi bi-clock-history"></i> Audit Log (100 Terakhir)</h5></div>
+    <div class="card-custom-body p-0">
+        <div class="table-responsive" style="max-height:400px;overflow-y:auto">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="table-light sticky-top">
+                    <tr><th>Waktu</th><th>User</th><th>Aktivitas</th><th>Detail</th><th>IP</th></tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td><small>{{ log.created_at[:19] }}</small></td>
+                        <td>{{ log.username }}</td>
+                        <td>{{ log.aktivitas }}</td>
+                        <td><small>{{ log.detail or '-' }}</small></td>
+                        <td><small>{{ log.ip_address or '-' }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Pengumuman{% endblock %}
+{% block page_title %}Pengumuman{% endblock %}
+
+{% block content %}
+<div class="card-custom">
+    <div class="card-custom-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-megaphone-fill"></i> Pengumuman</h5>
+        {% if current_user.role == 'admin' %}
+        <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#tambahModal">
+            <i class="bi bi-plus-circle"></i> Tambah Pengumuman
+        </button>
+        {% endif %}
+    </div>
+    <div class="card-custom-body">
+        {% for p in pengumuman %}
+        <div class="pengumuman-item">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h6 class="mb-1">{{ p.judul }}</h6>
+                    <div class="mb-2">
+                        <span class="badge bg-secondary">{{ p.kategori }}</span>
+                        <span class="badge bg-info">Target: {{ p.target }}</span>
+                        {% if p.nama_kelas %}<span class="badge bg-primary">{{ p.nama_kelas }}</span>{% endif %}
+                    </div>
+                    <p class="mb-1">{{ p.isi }}</p>
+                    <small class="text-muted">
+                        Oleh: {{ p.pembuat or '-' }} | {{ p.created_at[:16] }}
+                    </small>
+                </div>
+                {% if current_user.role == 'admin' %}
+                <form method="POST" action="{{ url_for('pengumuman_hapus', id=p.id) }}" onsubmit="return confirm('Hapus pengumuman?')">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state">Belum ada pengumuman</div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if current_user.role == 'admin' %}
+<div class="modal fade" id="tambahModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="POST" action="{{ url_for('pengumuman_tambah') }}">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tambah Pengumuman</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-2"><label class="form-label">Judul <span class="text-danger">*</span></label>
+                        <input type="text" name="judul" class="form-control" required></div>
+                    <div class="mb-2"><label class="form-label">Isi <span class="text-danger">*</span></label>
+                        <textarea name="isi" class="form-control" rows="5" required></textarea></div>
+                    <div class="row g-2">
+                        <div class="col-md-6"><label class="form-label">Kategori</label>
+                            <select name="kategori" class="form-select">
+                                <option value="umum">Umum</option>
+                                <option value="libur">Libur</option>
+                                <option value="ujian">Ujian</option>
+                                <option value="kegiatan">Kegiatan</option>
+                            </select></div>
+                        <div class="col-md-6"><label class="form-label">Target</label>
+                            <select name="target" class="form-select">
+                                <option value="semua">Semua</option>
+                                <option value="wali">Wali Santri</option>
+                                <option value="kelas">Kelas Tertentu</option>
+                            </select></div>
+                        <div class="col-md-6"><label class="form-label">Tanggal Mulai</label>
+                            <input type="date" name="tanggal_mulai" class="form-control"></div>
+                        <div class="col-md-6"><label class="form-label">Tanggal Selesai</label>
+                            <input type="date" name="tanggal_selesai" class="form-control"></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
